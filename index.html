@@ -1,0 +1,20 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AkiliOS Widget Test</title>
+  <script src="/src/index.js" akilios-client-id="abc123" defer></script>
+</head>
+<body>
+  <h1>AkiliOS Widget Test Page</h1>
+  <p>This is a basic test page to simulate client site loading your script.</p>
+
+  <script>
+    window.addEventListener("AkiliOSWidgetReady", (e) => {
+        console.log('----Ready-->>>>>')
+        console.log("Widget ready!", e.detail);
+    });
+  </script>
+</body>
+</html>
