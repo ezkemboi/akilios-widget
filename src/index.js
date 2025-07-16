@@ -147,13 +147,22 @@ import './widget.css';
 
       const userMsg = document.createElement('div');
       userMsg.className = 'akilios-message akilios-message-user';
-      userMsg.innerHTML = `
-        <span class="akilios-message-avatar">C</span>
-        <div class="akilios-message-bubble">
-          ${message}
-          <span class="akilios-message-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-        </div>
-      `;
+      
+      const avatar = document.createElement('span');
+      avatar.className = 'akilios-message-avatar';
+      avatar.textContent = 'C';
+      userMsg.appendChild(avatar);
+      
+      const bubble = document.createElement('div');
+      bubble.className = 'akilios-message-bubble';
+      bubble.textContent = message;
+      
+      const time = document.createElement('span');
+      time.className = 'akilios-message-time';
+      time.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      bubble.appendChild(time);
+      
+      userMsg.appendChild(bubble);
       messagesContainer.appendChild(userMsg);
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
       messageInput.value = '';
