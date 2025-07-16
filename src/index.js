@@ -1,63 +1,195 @@
+import './widget.css';
+
 (function () {
-    const AKILIOS_WIDGET_SESSION_KEY = 'Akilios_Session_Id';
-    const origin = window.location.origin;
-    const referrer = document.referrer;
-    const clientId = document.currentScript?.getAttribute("akilios-client-id");
+  const AKILIOS_WIDGET_SESSION_KEY = 'Akilios_Session_Id';
+  const origin = window.location.origin;
+  const referrer = document.referrer;
 
-    if(!clientId) {
-        console.warn("[AkiliOSWidget] Missing client ID.");
-        return // can register backend failed session load for investigations
+  // Support both static and dynamically injected scripts
+  let clientId;
+  try {
+    clientId =
+      document.currentScript?.getAttribute("akilios-client-id") ||
+      document.querySelector('script[src*="akilios-widget.js"]')?.getAttribute("akilios-client-id");
+  } catch {
+    clientId = null;
+  }
+
+  if (!clientId) {
+    console.warn("[AkiliOSWidget] Missing client ID.");
+    return;
+  }
+
+  function getOrCreateSessionId() {
+    let sessionId = localStorage.getItem(AKILIOS_WIDGET_SESSION_KEY);
+    if (!sessionId) {
+      sessionId = crypto.randomUUID();
+      localStorage.setItem(AKILIOS_WIDGET_SESSION_KEY, sessionId);
     }
+    return sessionId;
+  }
 
-    function APICall (method, payload) {
-        const URL = '';
-        fetch('url', ) // use async/await and try/catch , add headers
+  const sessionId = getOrCreateSessionId();
+
+  // Inject widget container
+  const widgetEl = document.createElement('div');
+  widgetEl.id = 'akilios-widget-container';
+  widgetEl.style.display = 'none';
+  widgetEl.innerHTML = `
+    <div class="akilios-widget">
+      <div class="akilios-header">
+        <span class="akilios-title">Customer Support</span>
+        <div class="akilios-header-actions">
+          <button id="akilios-minimize" class="akilios-header-btn">−</button>
+          <button id="akilios-close" class="akilios-header-btn">×</button>
+        </div>
+      </div>
+      <div class="akilios-body">
+        <div id="akilios-messages" class="akilios-messages">
+          <div class="akilios-message akilios-message-agent">
+            <span class="akilios-message-avatar">C</span>
+            <div class="akilios-message-bubble">Hi! How can I help you today?<span class="akilios-message-time">13:30</span></div>
+          </div>
+        </div>
+        <div class="akilios-input-row">
+          <input id="akilios-message" class="akilios-input" type="text" placeholder="Type your message..." autocomplete="off" />
+          <button id="akilios-send" class="akilios-send-btn" title="Send">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="akilios-send-icon">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l15.364-8.192a.75.75 0 011.086.67v15.044a.75.75 0 01-1.086.67L2.25 12zm0 0l7.5 3.75m-7.5-3.75l7.5-3.75" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="akilios-footer">Powered by AkiliOS</div>
+    </div>
+  `;
+  document.body.appendChild(widgetEl);
+
+  // Bubble (hidden initially)
+  const launcher = document.createElement('div');
+  launcher.innerText = '💬';
+  launcher.id = 'akilios-launcher';
+  launcher.className = 'akilios-launcher';
+  launcher.style = `
+    display: none;
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--akilios-primary, #2563eb);
+    color: var(--akilios-primary-contrast, #fff);
+    border-radius: 50%;
+    width: 56px;
+    height: 56px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+    font-size: 28px;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    cursor: pointer;
+    z-index: 9998;
+    border: none;
+    transition: background 0.2s;
+  `;
+  document.body.appendChild(launcher);
+
+  // Query elements
+  const closeBtn = widgetEl.querySelector('#akilios-close');
+  const minimizeBtn = widgetEl.querySelector('#akilios-minimize');
+  const sendBtn = widgetEl.querySelector('#akilios-send');
+  const messageInput = widgetEl.querySelector('#akilios-message');
+  const messagesContainer = widgetEl.querySelector('#akilios-messages');
+
+  // Widget public API
+  const AkiliOSWidget = {
+    getSessionId: () => sessionId,
+
+    open() {
+      widgetEl.style.display = 'block';
+      launcher.style.display = 'none';
+    },
+
+    close() {
+      widgetEl.style.display = 'none';
+      launcher.style.display = 'none';
+    },
+
+    minimize() {
+      widgetEl.style.display = 'none';
+      launcher.style.display = 'block';
+    },
+
+    showBubble() {
+      launcher.style.display = 'block';
+    },
+
+    contactMe: async function (formData) {
+      if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        console.warn("[AkiliOSWidget] Invalid or missing email");
+        return Promise.reject("Email is required and must be valid.");
+      }
+
+      const payload = {
+        clientId,
+        sessionId,
+        origin,
+        referrer,
+        ...formData,
+        submittedAt: new Date().toISOString()
+      };
+
+      console.log("Sending contactMe payload:", payload);
+      return Promise.resolve(payload); // Replace with fetch() to your backend if needed
     }
+  };
 
-    // Create or retrieve sessionId from localStorage
-    function getOrCreateSessionId() {
-        let sessionId = localStorage.getItem(AKILIOS_WIDGET_SESSION_KEY);
-        if (!sessionId) {
-            sessionId = crypto.randomUUID();
-            const sessionPayload = {
-                clientId, 
-                origin: origin,
-                referrer: referrer
-            }
-            console.log('Session Payload', { sessionPayload })
-            // APICall('POST', sessionPayload)
-            localStorage.setItem(AKILIOS_WIDGET_SESSION_KEY, sessionId);
-        }
-        return sessionId;
+  window.AkiliOSWidget = AkiliOSWidget;
+
+  // Safe event bindings
+  if (launcher) launcher.addEventListener('click', AkiliOSWidget.open);
+  if (closeBtn) closeBtn.addEventListener('click', AkiliOSWidget.close);
+  if (minimizeBtn) minimizeBtn.addEventListener('click', () => {
+    widgetEl.style.display = 'none';
+    launcher.style.display = 'flex';
+  });
+  if (sendBtn && messageInput && messagesContainer) {
+    sendBtn.addEventListener('click', () => {
+      const message = messageInput.value.trim();
+      if (!message) return;
+      // Add user's message to chat
+      const userMsg = document.createElement('div');
+      userMsg.className = 'akilios-message akilios-message-user';
+      userMsg.innerHTML = `<span class="akilios-message-avatar">C</span><div class="akilios-message-bubble"></div>`;
+      // Use textContent for user message to prevent XSS
+      userMsg.querySelector('.akilios-message-bubble').textContent = message;
+      // Add time
+      const timeSpan = document.createElement('span');
+      timeSpan.className = 'akilios-message-time';
+      timeSpan.textContent = '13:31';
+      userMsg.querySelector('.akilios-message-bubble').appendChild(timeSpan);
+      messagesContainer.appendChild(userMsg);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      messageInput.value = '';
+      // Simulate agent reply (for now)
+      setTimeout(() => {
+        const agentMsg = document.createElement('div');
+        agentMsg.className = 'akilios-message akilios-message-agent';
+        agentMsg.innerHTML = `<span class="akilios-message-avatar">C</span><div class="akilios-message-bubble">Thank you for your message!<span class="akilios-message-time">13:32</span></div>`;
+        messagesContainer.appendChild(agentMsg);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }, 800);
+    });
+  }
+
+  // Send message on Enter key
+  messageInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendBtn.click();
     }
+  });
 
-    const sessionId = getOrCreateSessionId(); // ✅ auto-run on load
-    // set global API
-    window.AkiliOSWidget = window.AkiliOSWidget || {};
-
-    // Optionally expose session
-    window.AkiliOSWidget.getSessionId = () => sessionId;
-    // Optional: flag that widget is ready
-    window.dispatchEvent(new CustomEvent("AkiliOSWidgetReady", {
-        detail: { sessionId, clientId }
-    }));
-
-    // Add contactMe Function, - check if sessionId is there, only check to make sure that email is available
-    window.AkiliOSWidget.contactMe = async function (formData) {
-        if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-            console.warn("[AkiliOSWidget] Invalid or missing email");
-            return Promise.reject("Email is required and must be valid.");
-        }
-        // form validations of what is required -> 
-        const payload = {
-            clientId,
-            sessionId,
-            origin,
-            referrer,
-            ...formData,
-            submittedAt: new Date().toISOString()
-        };
-        // call API later to register, make sure siteId is available and origin/referrer validated or whitelisted
-        return payload; // will return response.json here when connected to the backend
-    }
-})(); // invoke the function
+  // Dispatch ready signal
+  window.dispatchEvent(new CustomEvent("AkiliOSWidgetReady", {
+    detail: { sessionId, clientId }
+  }));
+})();
