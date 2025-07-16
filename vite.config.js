@@ -1,5 +1,6 @@
 // vite.config.js
 export default {
+  plugins: [],
   build: {
     lib: {
       entry: 'src/index.js',
