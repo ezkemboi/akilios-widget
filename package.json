@@ -2,7 +2,7 @@
   "name": "akilios-widget",
   "version": "1.0.0",
   "description": "",
-  "main": "script.js",
+  "main": "src/index.js",
   "scripts": {
     "dev": "vite",
     "start": "npm run build && serve dist -l 3000",
@@ -16,11 +16,5 @@
   "devDependencies": {
     "serve": "^14.2.4",
     "vite": "^7.0.4"
-  },
-  "dependencies": {
-    "@tailwindcss/postcss": "^4.1.11",
-    "@tailwindcss/vite": "^4.1.11",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.11"
   }
 }
