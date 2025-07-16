@@ -68,10 +68,11 @@
   height: 32px;
   border-radius: 50%;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: color 0.2s;
 }
 #akilios-widget-container .akilios-header-btn:hover {
-  background: rgba(0,0,0,0.08);
+  background: none;
+  color: var(--akilios-primary-contrast);
 }
 #akilios-widget-container .akilios-body {
   padding: 0 0 8px 0;
@@ -163,16 +164,23 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, color 0.2s;
   box-shadow: 0 1px 4px rgba(0,0,0,0.08);
 }
 #akilios-widget-container .akilios-send-btn:hover {
-  background: var(--akilios-primary-hover);
+  background: var(--akilios-primary, #2563eb);
+  color: var(--akilios-primary-contrast, #fff);
 }
 #akilios-widget-container .akilios-send-icon {
   width: 24px;
   height: 24px;
   display: block;
+  stroke: var(--akilios-primary-contrast, #fff);
+  fill: none;
+  transition: stroke 0.2s;
+}
+#akilios-widget-container .akilios-send-btn:hover .akilios-send-icon {
+  stroke: var(--akilios-primary-contrast, #fff);
 }
 #akilios-widget-container .akilios-footer {
   text-align: center;
@@ -182,4 +190,34 @@
   padding: 8px 0 10px 0;
   border-bottom-left-radius: var(--akilios-radius);
   border-bottom-right-radius: var(--akilios-radius);
+}
+#akilios-launcher, .akilios-launcher {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--akilios-primary, #2563eb);
+  color: var(--akilios-primary-contrast, #fff);
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+  font-size: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 9998;
+  border: none;
+  transition: background 0.2s;
+  outline: none;
+}
+#akilios-launcher:hover, .akilios-launcher:hover {
+  background: var(--akilios-primary-hover, #1746a2);
+}
+#akilios-launcher svg, .akilios-launcher svg {
+  width: 32px;
+  height: 32px;
+  display: block;
+  stroke: currentColor;
+  fill: currentColor;
 }

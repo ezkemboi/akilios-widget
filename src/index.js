@@ -65,22 +65,30 @@ import './widget.css';
   `;
   document.body.appendChild(widgetEl);
 
-  // Bubble icon
+  // Bubble (hidden initially)
   const launcher = document.createElement('div');
   launcher.innerText = '💬';
   launcher.id = 'akilios-launcher';
+  launcher.className = 'akilios-launcher';
   launcher.style = `
     display: none;
     position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: var(--akilios-primary);
-    color: var(--akilios-primary-contrast);
-    border-radius: 9999px;
-    padding: 14px 16px;
+    bottom: 24px;
+    right: 24px;
+    background: var(--akilios-primary, #2563eb);
+    color: var(--akilios-primary-contrast, #fff);
+    border-radius: 50%;
+    width: 56px;
+    height: 56px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+    font-size: 28px;
+    align-items: center;
+    justify-content: center;
+    display: flex;
     cursor: pointer;
-    font-size: 18px;
     z-index: 9998;
+    border: none;
+    transition: background 0.2s;
   `;
   document.body.appendChild(launcher);
 
@@ -139,49 +147,46 @@ import './widget.css';
   // Safe event bindings
   if (launcher) launcher.addEventListener('click', AkiliOSWidget.open);
   if (closeBtn) closeBtn.addEventListener('click', AkiliOSWidget.close);
-  if (minimizeBtn) minimizeBtn.addEventListener('click', AkiliOSWidget.minimize);
+  if (minimizeBtn) minimizeBtn.addEventListener('click', () => {
+    widgetEl.style.display = 'none';
+    launcher.style.display = 'flex';
+  });
   if (sendBtn && messageInput && messagesContainer) {
     sendBtn.addEventListener('click', () => {
       const message = messageInput.value.trim();
       if (!message) return;
-
+      // Add user's message to chat
       const userMsg = document.createElement('div');
       userMsg.className = 'akilios-message akilios-message-user';
-      
-      const avatar = document.createElement('span');
-      avatar.className = 'akilios-message-avatar';
-      avatar.textContent = 'C';
-      userMsg.appendChild(avatar);
-      
-      const bubble = document.createElement('div');
-      bubble.className = 'akilios-message-bubble';
-      bubble.textContent = message;
-      
-      const time = document.createElement('span');
-      time.className = 'akilios-message-time';
-      time.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      bubble.appendChild(time);
-      
-      userMsg.appendChild(bubble);
+      userMsg.innerHTML = `<span class="akilios-message-avatar">C</span><div class="akilios-message-bubble"></div>`;
+      // Use textContent for user message to prevent XSS
+      userMsg.querySelector('.akilios-message-bubble').textContent = message;
+      // Add time
+      const timeSpan = document.createElement('span');
+      timeSpan.className = 'akilios-message-time';
+      timeSpan.textContent = '13:31';
+      userMsg.querySelector('.akilios-message-bubble').appendChild(timeSpan);
       messagesContainer.appendChild(userMsg);
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
       messageInput.value = '';
-
+      // Simulate agent reply (for now)
       setTimeout(() => {
         const agentMsg = document.createElement('div');
         agentMsg.className = 'akilios-message akilios-message-agent';
-        agentMsg.innerHTML = `
-          <span class="akilios-message-avatar">C</span>
-          <div class="akilios-message-bubble">
-            Thank you for your message!
-            <span class="akilios-message-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-          </div>
-        `;
+        agentMsg.innerHTML = `<span class="akilios-message-avatar">C</span><div class="akilios-message-bubble">Thank you for your message!<span class="akilios-message-time">13:32</span></div>`;
         messagesContainer.appendChild(agentMsg);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
       }, 800);
     });
   }
+
+  // Send message on Enter key
+  messageInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendBtn.click();
+    }
+  });
 
   // Dispatch ready signal
   window.dispatchEvent(new CustomEvent("AkiliOSWidgetReady", {
