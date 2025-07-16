@@ -11,8 +11,8 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
-  "type": "commonjs",
+  "license": "",
+  "type": "module",
   "devDependencies": {
     "serve": "^14.2.4",
     "vite": "^7.0.4"

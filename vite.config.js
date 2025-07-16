@@ -1,18 +1,18 @@
-// vite.config.js
-export default {
-  plugins: [],
+import { defineConfig } from 'vite';
+
+export default defineConfig({
   build: {
     lib: {
       entry: 'src/index.js',
-      formats: ['iife'], // Immediately Invoked Function Expression
       name: 'AkiliOSWidget',
       fileName: () => 'akilios-widget.js',
+      formats: ['iife'], // builds a <script> friendly global
     },
     minify: true,
     rollupOptions: {
       output: {
-        globals: {}
+        assetFileNames: 'akilios-widget.css'
       }
     }
   }
-};
+});
