@@ -4,10 +4,12 @@ import './widget.css';
   const AKILIOS_WIDGET_SESSION_KEY = 'Akilios_Session_Id';
   const origin = window.location.origin;
   const referrer = document.referrer;
+  const apiUrl = import.meta.env.VITE_API_ENDPOINT;
 
   // Support both static and dynamically injected scripts
   let clientId;
   try {
+    // validate clientId and set sessionId
     clientId =
       document.currentScript?.getAttribute("akilios-client-id") ||
       document.querySelector('script[src*="akilios-widget.js"]')?.getAttribute("akilios-client-id");
@@ -20,9 +22,35 @@ import './widget.css';
     return;
   }
 
-  function getOrCreateSessionId() {
+  function addHeaders() {
+    return {
+      'Content-Type': 'application/json',
+      'X-Session-Id': localStorage.getItem(AKILIOS_WIDGET_SESSION_KEY) || undefined,
+      'X-Client-Id': clientId,
+      "X-Submitted-At": new Date().toISOString()
+    }
+  }
+
+  async function generateClientSession() {
+    const payload = {
+      submittedAt: new Date().toISOString()
+    }
+    // do validation here also for frontend
+    return await fetch(`${apiUrl}/session`, {
+      method: 'POST',
+      headers: addHeaders(),
+      body: JSON.stringify(payload)
+    }).then(res => res.json());
+  }
+
+  // check on how to do cache inside CDN for clientId and sessionId
+  async function getOrCreateSessionId() {
+    const response = await generateClientSession();
+    console.log('----->>>>', response )
     let sessionId = localStorage.getItem(AKILIOS_WIDGET_SESSION_KEY);
     if (!sessionId) {
+      const response = await generateClientSession();
+      console.log('----->>>>', response )
       sessionId = crypto.randomUUID();
       localStorage.setItem(AKILIOS_WIDGET_SESSION_KEY, sessionId);
     }

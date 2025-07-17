@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AkiliOS Widget Test</title>
+  <link href="dist/akilios-widget.css" rel="stylesheet" />
+</head>
+<body>
+  <h1>Widget API Test</h1>
+  <button id="testContact">Call contactMe()</button>
+
+  <!-- Load the built widget -->
+  <script 
+    src="dist/akilios-widget.js" 
+    akilios-client-id="client-abc-001">
+  </script>
+
+  <script>
+    window.addEventListener('AkiliOSWidgetReady', () => {
+      console.log("Widget ready!");
+
+      document.getElementById("testContact").addEventListener("click", () => {
+        window.AkiliOSWidget.contactMe({
+          email: "test@akilios.com",
+          message: "Testing from HTML!"
+        }).then(console.log).catch(console.error);
+      });
+    });
+  </script>
+</body>
+</html>
