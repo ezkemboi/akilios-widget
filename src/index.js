@@ -4,10 +4,12 @@ import './widget.css';
   const AKILIOS_WIDGET_SESSION_KEY = 'Akilios_Session_Id';
   const origin = window.location.origin;
   const referrer = document.referrer;
+  const apiUrl = import.meta.env.VITE_API_ENDPOINT;
 
   // Support both static and dynamically injected scripts
   let clientId;
   try {
+    // validate clientId and set sessionId
     clientId =
       document.currentScript?.getAttribute("akilios-client-id") ||
       document.querySelector('script[src*="akilios-widget.js"]')?.getAttribute("akilios-client-id");
@@ -20,11 +22,31 @@ import './widget.css';
     return;
   }
 
-  function getOrCreateSessionId() {
+  function addHeaders() {
+    return {
+      'Content-Type': 'application/json',
+      'X-Session-Id': localStorage.getItem(AKILIOS_WIDGET_SESSION_KEY) || undefined,
+      'X-Client-Id': clientId,
+      "X-Submitted-At": new Date().toISOString()
+    }
+  }
+
+  async function generateClientSession() {
+    const payload = {}
+    // do validation here also for frontend
+    return await fetch(`${apiUrl}/session`, {
+      method: 'POST',
+      headers: addHeaders(),
+      body: JSON.stringify(payload)
+    }).then(res => res.json());
+  }
+
+  // check on how to do cache inside CDN for clientId and sessionId
+  async function getOrCreateSessionId() {
     let sessionId = localStorage.getItem(AKILIOS_WIDGET_SESSION_KEY);
     if (!sessionId) {
-      sessionId = crypto.randomUUID();
-      localStorage.setItem(AKILIOS_WIDGET_SESSION_KEY, sessionId);
+      const response = await generateClientSession();
+      localStorage.setItem(AKILIOS_WIDGET_SESSION_KEY, response.sessionId);
     }
     return sessionId;
   }
@@ -137,10 +159,22 @@ import './widget.css';
         submittedAt: new Date().toISOString()
       };
 
-      console.log("Sending contactMe payload:", payload);
-      return Promise.resolve(payload); // Replace with fetch() to your backend if needed
+      return await fetch(`${apiUrl}/contact`, {
+        method: 'POST',
+        headers: addHeaders(),
+        body: JSON.stringify(payload)
+      }).then(res => res.json());
     }
   };
+
+  async function chatWithAIOrAgent(payload) {
+    // do validation here also for frontend
+    return await fetch(`${apiUrl}/conversation`, {
+      method: 'POST',
+      headers: addHeaders(),
+      body: JSON.stringify(payload)
+    }).then(res => res.json());
+  }
 
   window.AkiliOSWidget = AkiliOSWidget;
 
@@ -152,7 +186,7 @@ import './widget.css';
     launcher.style.display = 'flex';
   });
   if (sendBtn && messageInput && messagesContainer) {
-    sendBtn.addEventListener('click', () => {
+    sendBtn.addEventListener('click', async () => {
       const message = messageInput.value.trim();
       if (!message) return;
       // Add user's message to chat
@@ -169,14 +203,27 @@ import './widget.css';
       messagesContainer.appendChild(userMsg);
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
       messageInput.value = '';
-      // Simulate agent reply (for now)
-      setTimeout(() => {
-        const agentMsg = document.createElement('div');
-        agentMsg.className = 'akilios-message akilios-message-agent';
-        agentMsg.innerHTML = `<span class="akilios-message-avatar">C</span><div class="akilios-message-bubble">Thank you for your message!<span class="akilios-message-time">13:32</span></div>`;
-        messagesContainer.appendChild(agentMsg);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      }, 800);
+      // respond to messages, need to see how to keep history
+      const { success } = await chatWithAIOrAgent({ message })
+      if(success) {
+        const eventSource = new EventSource(`${apiUrl}/chat-stream?sessionId=${localStorage.getItem(AKILIOS_WIDGET_SESSION_KEY)}&clientId=${clientId}`);
+        const botMsg = document.createElement('div');
+        botMsg.className = 'akilios-message akilios-message-agent';
+        botMsg.innerHTML = `<span class="akilios-message-avatar">C</span><div class="akilios-message-bubble"></div>`;
+        const bubble = botMsg.querySelector('.akilios-message-bubble');
+        eventSource.onmessage = (e) => {
+          bubble.textContent += e.data + " ";
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        };
+        eventSource.addEventListener("done", () => {
+          const time = document.createElement("span");
+          time.className = "akilios-message-time";
+          time.textContent = new Date().toLocaleTimeString();
+          bubble.appendChild(time);
+          messagesContainer.appendChild(botMsg);
+          eventSource.close();
+        });
+      }
     });
   }
 
