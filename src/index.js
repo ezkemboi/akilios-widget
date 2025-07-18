@@ -32,9 +32,7 @@ import './widget.css';
   }
 
   async function generateClientSession() {
-    const payload = {
-      submittedAt: new Date().toISOString()
-    }
+    const payload = {}
     // do validation here also for frontend
     return await fetch(`${apiUrl}/session`, {
       method: 'POST',
@@ -45,14 +43,10 @@ import './widget.css';
 
   // check on how to do cache inside CDN for clientId and sessionId
   async function getOrCreateSessionId() {
-    const response = await generateClientSession();
-    console.log('----->>>>', response )
     let sessionId = localStorage.getItem(AKILIOS_WIDGET_SESSION_KEY);
     if (!sessionId) {
       const response = await generateClientSession();
-      console.log('----->>>>', response )
-      sessionId = crypto.randomUUID();
-      localStorage.setItem(AKILIOS_WIDGET_SESSION_KEY, sessionId);
+      localStorage.setItem(AKILIOS_WIDGET_SESSION_KEY, response.sessionId);
     }
     return sessionId;
   }
@@ -165,8 +159,13 @@ import './widget.css';
         submittedAt: new Date().toISOString()
       };
 
-      console.log("Sending contactMe payload:", payload);
-      return Promise.resolve(payload); // Replace with fetch() to your backend if needed
+      const response = await fetch(`${apiUrl}/contact`, {
+        method: 'POST',
+        headers: addHeaders(),
+        body: JSON.stringify(payload)
+      }).then(res => res.json());
+      console.log({ response })
+      return response;
     }
   };
 
