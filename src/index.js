@@ -159,15 +159,22 @@ import './widget.css';
         submittedAt: new Date().toISOString()
       };
 
-      const response = await fetch(`${apiUrl}/contact`, {
+      return await fetch(`${apiUrl}/contact`, {
         method: 'POST',
         headers: addHeaders(),
         body: JSON.stringify(payload)
       }).then(res => res.json());
-      console.log({ response })
-      return response;
     }
   };
+
+  async function chatWithAIOrAgent(payload) {
+    // do validation here also for frontend
+    return await fetch(`${apiUrl}/conversation`, {
+      method: 'POST',
+      headers: addHeaders(),
+      body: JSON.stringify(payload)
+    }).then(res => res.json());
+  }
 
   window.AkiliOSWidget = AkiliOSWidget;
 
@@ -179,7 +186,7 @@ import './widget.css';
     launcher.style.display = 'flex';
   });
   if (sendBtn && messageInput && messagesContainer) {
-    sendBtn.addEventListener('click', () => {
+    sendBtn.addEventListener('click', async () => {
       const message = messageInput.value.trim();
       if (!message) return;
       // Add user's message to chat
@@ -196,14 +203,27 @@ import './widget.css';
       messagesContainer.appendChild(userMsg);
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
       messageInput.value = '';
-      // Simulate agent reply (for now)
-      setTimeout(() => {
-        const agentMsg = document.createElement('div');
-        agentMsg.className = 'akilios-message akilios-message-agent';
-        agentMsg.innerHTML = `<span class="akilios-message-avatar">C</span><div class="akilios-message-bubble">Thank you for your message!<span class="akilios-message-time">13:32</span></div>`;
-        messagesContainer.appendChild(agentMsg);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      }, 800);
+      // respond to messages, need to see how to keep history
+      const { success } = await chatWithAIOrAgent({ message })
+      if(success) {
+        const eventSource = new EventSource(`${apiUrl}/chat-stream?sessionId=${localStorage.getItem(AKILIOS_WIDGET_SESSION_KEY)}&clientId=${clientId}`);
+        const botMsg = document.createElement('div');
+        botMsg.className = 'akilios-message akilios-message-agent';
+        botMsg.innerHTML = `<span class="akilios-message-avatar">C</span><div class="akilios-message-bubble"></div>`;
+        const bubble = botMsg.querySelector('.akilios-message-bubble');
+        eventSource.onmessage = (e) => {
+          bubble.textContent += e.data + " ";
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        };
+        eventSource.addEventListener("done", () => {
+          const time = document.createElement("span");
+          time.className = "akilios-message-time";
+          time.textContent = new Date().toLocaleTimeString();
+          bubble.appendChild(time);
+          messagesContainer.appendChild(botMsg);
+          eventSource.close();
+        });
+      }
     });
   }
 
