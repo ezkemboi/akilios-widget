@@ -167,6 +167,14 @@ import './widget.css';
     }
   };
 
+  async function createConversation(payload) {
+    return await fetch(`${apiUrl}/conversation`, {
+      method: 'POST',
+      headers: addHeaders(),
+      body: JSON.stringify(payload)
+    }).then(res => res.json());
+  }
+
   function createBotBubble() {
     const botMsg = document.createElement("div");
     botMsg.className = "akilios-message akilios-message-agent";
@@ -186,50 +194,19 @@ import './widget.css';
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
   }
 
-  async function chatWithAIOrAgent(payload) {
+  async function streamChat(messageId) {
     // do validation here also for frontend
-    const response = await fetch(`${apiUrl}/conversation`, {
-      method: 'POST',
-      headers: {
-        ...addHeaders(),
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
-  
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`API Error: ${response.status} - ${error}`);
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder("utf-8");
-    let buffer = "";
-
+    const sessionId = localStorage.getItem(AKILIOS_WIDGET_SESSION_KEY);
+    const eventSource = new EventSource(`${apiUrl}/chat-stream?messageId=${messageId}&sessionId=${sessionId}&clientId=${clientId}`);
     const bubble = createBotBubble();
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-
-      const chunks = buffer.split("\n\n");
-      buffer = chunks.pop(); // last incomplete chunk remains in buffer
-
-      for (const chunk of chunks) {
-        if (chunk.startsWith("data:")) {
-          const text = chunk.replace("data:", "").trim();
-          if (text === "[DONE]") {
-            appendTime(bubble);
-            return;
-          }
-          bubble.textContent += text + " ";
-          scrollMessagesToBottom();
-          // onChunk(text);
-        }
-      }
-    }
+    eventSource.onmessage = (e) => {
+      bubble.textContent += e.data + " ";
+      scrollMessagesToBottom();
+    };
+    eventSource.addEventListener("done", () => {
+      appendTime(bubble);
+      eventSource.close();
+    });
   }
 
   window.AkiliOSWidget = AkiliOSWidget;
@@ -260,7 +237,10 @@ import './widget.css';
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
       messageInput.value = '';
       // respond to messages, need to see how to keep history
-      await chatWithAIOrAgent({ message });
+      const response = await createConversation({ message });
+      if(response.success && response.messageId) {
+        await streamChat(response.messageId)
+      }
     });
   }
 
