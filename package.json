@@ -14,7 +14,7 @@
   "license": "",
   "type": "module",
   "devDependencies": {
-    "serve": "^14.2.4",
+    "serve": "^10.0.2",
     "vite": "^7.0.4"
   }
 }
