@@ -143,7 +143,7 @@ import "./widget.css";
       const response = await AkiliOSWidget.contactMe(formData);
       // alert(response.message || "Message sent successfully!");
       form.reset();
-      AkiliOSWidget.minimize();
+      // AkiliOSWidget.minimize();
     } catch (err) {
       // alert("❌ Failed to send. Please try again.");
     }
