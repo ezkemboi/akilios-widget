@@ -141,6 +141,7 @@ import "./widget.css";
 
     try {
       const response = await AkiliOSWidget.contactMe(formData);
+      // redeploy
       // alert(response.message || "Message sent successfully!");
       form.reset();
       // AkiliOSWidget.minimize();
