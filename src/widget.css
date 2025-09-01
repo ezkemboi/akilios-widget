@@ -1,36 +1,65 @@
+/* =========================
+   Akilios Widget Container
+========================= */
+:root {
+  --akilios-primary: #2563eb;
+  --akilios-primary-hover: #1746a2;
+  --akilios-primary-contrast: #fff;
+}
+
 #akilios-widget-container {
   --akilios-primary: #2563eb;
+  --akilios-primary-hover: #1746a2;
   --akilios-primary-contrast: #fff;
   --akilios-bg: #fff;
-  --akilios-bg-alt: #f3f4f6;
+  --akilios-bg-alt: #f9fafb;
   --akilios-border: #e5e7eb;
-  --akilios-text: #222;
-  --akilios-muted: #888;
+  --akilios-text: #1f2937;
+  --akilios-muted: #6b7280;
   --akilios-radius: 16px;
-  --akilios-shadow: 0 4px 24px rgba(0,0,0,0.12);
-  --akilios-avatar-bg: #e0e7ef;
-  --akilios-user-bg: #e0eaff;
-  --akilios-agent-bg: #f3f4f6;
-  --akilios-footer-bg: transparent;
+  --akilios-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+
   position: fixed;
   bottom: 24px;
   right: 24px;
   z-index: 9999;
   font-family: 'Inter', Arial, sans-serif;
+  font-size: 14px;
 }
+
+.akilios-launcher {
+  background-color: var(--akilios-primary) !important;
+  color: var(--akilios-primary-contrast);
+  border: none;
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: background 0.2s;
+}
+
+.akilios-launcher:hover {
+  background-color: var(--akilios-primary-hover);
+}
+
+/* =========================
+   Dark Mode
+========================= */
 #akilios-widget-container.dark {
-  --akilios-primary: #2563eb;
-  --akilios-primary-contrast: #fff;
   --akilios-bg: #18181b;
   --akilios-bg-alt: #232336;
-  --akilios-border: #333;
-  --akilios-text: #f3f4f6;
-  --akilios-muted: #aaa;
-  --akilios-avatar-bg: #232336;
-  --akilios-user-bg: #2a3a5a;
-  --akilios-agent-bg: #232336;
-  --akilios-footer-bg: transparent;
+  --akilios-border: #2d2d2d;
+  --akilios-text: #f9fafb;
+  --akilios-muted: #a1a1aa;
 }
+
+/* =========================
+   Widget Wrapper
+========================= */
 #akilios-widget-container .akilios-widget {
   width: 340px;
   background: var(--akilios-bg);
@@ -40,184 +69,188 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  animation: akiliosFadeUp 0.25s ease;
 }
+
+/* =========================
+   Header
+========================= */
 #akilios-widget-container .akilios-header {
   background: var(--akilios-primary);
   color: var(--akilios-primary-contrast);
-  padding: 16px;
+  padding: 14px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-top-left-radius: var(--akilios-radius);
-  border-top-right-radius: var(--akilios-radius);
 }
+
 #akilios-widget-container .akilios-title {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
 }
+
 #akilios-widget-container .akilios-header-actions {
   display: flex;
-  gap: 4px;
+  gap: 6px;
 }
+
 #akilios-widget-container .akilios-header-btn {
-  background: none;
+  background: transparent;
   border: none;
-  color: var(--akilios-primary-contrast);
-  font-size: 1.2rem;
-  width: 32px;
-  height: 32px;
+  color: inherit;
+  font-size: 1.1rem;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   cursor: pointer;
-  transition: color 0.2s;
+  transition: background 0.2s;
 }
+
 #akilios-widget-container .akilios-header-btn:hover {
-  background: none;
-  color: var(--akilios-primary-contrast);
+  background: rgba(255, 255, 255, 0.15);
 }
+
+/* =========================
+   Body
+========================= */
 #akilios-widget-container .akilios-body {
-  padding: 0 0 8px 0;
-  background: var(--akilios-bg);
-  display: flex;
-  flex-direction: column;
-  height: 400px;
-}
-#akilios-widget-container .akilios-messages {
+  padding: 16px;
   flex: 1;
   overflow-y: auto;
-  padding: 16px 16px 0 16px;
+}
+
+/* =========================
+   Contact Form
+========================= */
+#akilios-widget-container .akilios-contact-form {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
-#akilios-widget-container .akilios-message {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-}
-#akilios-widget-container .akilios-message-user {
-  flex-direction: row-reverse;
-}
-#akilios-widget-container .akilios-message-avatar {
-  width: 32px;
-  height: 32px;
-  background: var(--akilios-avatar-bg);
-  color: var(--akilios-muted);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 1rem;
-}
-#akilios-widget-container .akilios-message-bubble {
-  background: var(--akilios-agent-bg);
-  color: var(--akilios-text);
-  border-radius: 12px;
-  padding: 10px 14px;
-  font-size: 1rem;
-  max-width: 220px;
-  position: relative;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-  word-break: break-word;
-}
-#akilios-widget-container .akilios-message-user .akilios-message-bubble {
-  background: var(--akilios-user-bg);
-  color: var(--akilios-text);
-}
-#akilios-widget-container .akilios-message-time {
-  display: block;
-  font-size: 0.75rem;
-  color: var(--akilios-muted);
-  margin-top: 4px;
-  text-align: right;
-}
-#akilios-widget-container .akilios-input-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px 8px 16px;
-  border-top: 1px solid var(--akilios-border);
-  background: var(--akilios-bg-alt);
-}
-#akilios-widget-container .akilios-input {
-  flex: 1;
+
+#akilios-widget-container .akilios-form-input,
+#akilios-widget-container .akilios-form-textarea {
   border: 1px solid var(--akilios-border);
   border-radius: 8px;
   padding: 10px 12px;
-  font-size: 1rem;
+  font-size: 0.95rem;
   background: var(--akilios-bg);
   color: var(--akilios-text);
-  outline: none;
-  transition: border 0.2s;
+  transition: border 0.2s, box-shadow 0.2s;
 }
-#akilios-widget-container .akilios-input:focus {
+
+#akilios-widget-container .akilios-form-input:focus,
+#akilios-widget-container .akilios-form-textarea:focus {
   border-color: var(--akilios-primary);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
 }
+
+#akilios-widget-container .akilios-form-textarea {
+  resize: vertical;
+  min-height: 90px;
+  line-height: 1.4;
+}
+
+/* =========================
+   Send Button
+========================= */
 #akilios-widget-container .akilios-send-btn {
   background: var(--akilios-primary);
   color: var(--akilios-primary-contrast);
   border: none;
   border-radius: 8px;
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 12px 16px;
+  font-size: 0.95rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  transition: background 0.2s, transform 0.1s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
+
 #akilios-widget-container .akilios-send-btn:hover {
-  background: var(--akilios-primary, #2563eb);
-  color: var(--akilios-primary-contrast, #fff);
+  background: var(--akilios-primary-hover);
 }
-#akilios-widget-container .akilios-send-icon {
-  width: 24px;
-  height: 24px;
-  display: block;
-  stroke: var(--akilios-primary-contrast, #fff);
-  fill: none;
-  transition: stroke 0.2s;
+
+#akilios-widget-container .akilios-send-btn:active {
+  transform: scale(0.97);
 }
-#akilios-widget-container .akilios-send-btn:hover .akilios-send-icon {
-  stroke: var(--akilios-primary-contrast, #fff);
+
+#akilios-widget-container .akilios-send-btn:disabled {
+  background: var(--akilios-border);
+  color: var(--akilios-muted);
+  cursor: not-allowed;
 }
+
+/* =========================
+   Toast Messages
+========================= */
+#akilios-widget-container .akilios-toast {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: none;
+}
+
+#akilios-widget-container .akilios-toast.success {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+}
+
+#akilios-widget-container .akilios-toast.error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+/* =========================
+   Footer
+========================= */
 #akilios-widget-container .akilios-footer {
   text-align: center;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--akilios-muted);
-  background: var(--akilios-footer-bg);
-  padding: 8px 0 10px 0;
-  border-bottom-left-radius: var(--akilios-radius);
-  border-bottom-right-radius: var(--akilios-radius);
+  padding: 8px 0;
+  border-top: 1px solid var(--akilios-border);
 }
-#akilios-launcher, .akilios-launcher {
+
+/* =========================
+   Launcher Button
+========================= */
+#akilios-launcher {
   position: fixed;
   bottom: 24px;
   right: 24px;
-  background: var(--akilios-primary, #2563eb);
-  color: var(--akilios-primary-contrast, #fff);
+  background: var(--akilios-primary);
+  color: var(--akilios-primary-contrast);
   border-radius: 50%;
   width: 56px;
   height: 56px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
-  font-size: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 28px;
   cursor: pointer;
-  z-index: 9998;
-  border: none;
+  box-shadow: var(--akilios-shadow);
   transition: background 0.2s;
-  outline: none;
 }
-#akilios-launcher:hover, .akilios-launcher:hover {
-  background: var(--akilios-primary-hover, #1746a2);
+
+#akilios-launcher:hover {
+  background: var(--akilios-primary-hover);
 }
-#akilios-launcher svg, .akilios-launcher svg {
-  width: 32px;
-  height: 32px;
-  display: block;
-  stroke: currentColor;
-  fill: currentColor;
+
+/* =========================
+   Animations
+========================= */
+@keyframes akiliosFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
