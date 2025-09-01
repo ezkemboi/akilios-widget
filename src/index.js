@@ -6,24 +6,11 @@ import "./widget.css";
   const referrer = document.referrer;
   const apiUrl = import.meta.env.VITE_API_ENDPOINT;
 
-  // Get clientId from script tag
-  let clientId =
-    document.currentScript?.getAttribute("akilios-client-id") ||
-    document
-      .querySelector('script[src*="akilios-widget.js"]')
-      ?.getAttribute("akilios-client-id");
-
-  if (!clientId) {
-    console.warn("[AkiliOSWidget] Missing client ID.");
-    return;
-  }
-
   /** ---- Helpers ---- **/
   function addHeaders() {
     return {
       "Content-Type": "application/json",
       "X-Session-Id": localStorage.getItem(AKILIOS_WIDGET_SESSION_KEY) || "",
-      "X-Client-Id": clientId,
       "X-Submitted-At": new Date().toISOString(),
     };
   }
@@ -116,7 +103,7 @@ import "./widget.css";
       ) {
         return Promise.reject("Email is required and must be valid.");
       }
-      const payload = { clientId, sessionId, origin, referrer, ...formData };
+      const payload = { sessionId, origin, referrer, ...formData };
       const res = await fetch(`${apiUrl}/contact`, {
         method: "POST",
         headers: addHeaders(),
@@ -153,7 +140,7 @@ import "./widget.css";
   // Dispatch ready signal
   window.dispatchEvent(
     new CustomEvent("AkiliOSWidgetReady", {
-      detail: { sessionId, clientId },
+      detail: { sessionId },
     })
   );
 
