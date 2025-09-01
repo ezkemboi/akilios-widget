@@ -1,7 +1,7 @@
-import './widget.css';
+import "./widget.css";
 
-(function () {
-  const AKILIOS_WIDGET_SESSION_KEY = 'Akilios_Session_Id';
+(async function () {
+  const AKILIOS_WIDGET_SESSION_KEY = "Akilios_Session_Id";
   const origin = window.location.origin;
   const referrer = document.referrer;
   const apiUrl = import.meta.env.VITE_API_ENDPOINT;
@@ -12,7 +12,9 @@ import './widget.css';
     // validate clientId and set sessionId
     clientId =
       document.currentScript?.getAttribute("akilios-client-id") ||
-      document.querySelector('script[src*="akilios-widget.js"]')?.getAttribute("akilios-client-id");
+      document
+        .querySelector('script[src*="akilios-widget.js"]')
+        ?.getAttribute("akilios-client-id");
   } catch {
     clientId = null;
   }
@@ -24,39 +26,52 @@ import './widget.css';
 
   function addHeaders() {
     return {
-      'Content-Type': 'application/json',
-      'X-Session-Id': localStorage.getItem(AKILIOS_WIDGET_SESSION_KEY) || undefined,
-      'X-Client-Id': clientId,
-      "X-Submitted-At": new Date().toISOString()
-    }
+      "Content-Type": "application/json",
+      "X-Session-Id":
+        localStorage.getItem(AKILIOS_WIDGET_SESSION_KEY) || undefined,
+      "X-Client-Id": clientId,
+      "X-Submitted-At": new Date().toISOString(),
+    };
   }
 
   async function generateClientSession() {
-    const payload = {}
+    const payload = {};
     // do validation here also for frontend
     return await fetch(`${apiUrl}/session`, {
-      method: 'POST',
+      method: "POST",
       headers: addHeaders(),
-      body: JSON.stringify(payload)
-    }).then(res => res.json());
+      body: JSON.stringify(payload),
+    }).then((res) => res.json());
   }
 
   // check on how to do cache inside CDN for clientId and sessionId
   async function getOrCreateSessionId() {
-    let sessionId = localStorage.getItem(AKILIOS_WIDGET_SESSION_KEY);
-    if (!sessionId) {
-      const response = await generateClientSession();
-      localStorage.setItem(AKILIOS_WIDGET_SESSION_KEY, response.sessionId);
+    const existingSessionId = localStorage.getItem(AKILIOS_WIDGET_SESSION_KEY);
+    if (existingSessionId) {
+      return existingSessionId;
     }
-    return sessionId;
+
+    const response = await generateClientSession();
+
+    if (response.valid && response.sessionId) {
+      localStorage.setItem(AKILIOS_WIDGET_SESSION_KEY, response.sessionId);
+      return response.sessionId;
+    } else {
+      localStorage.removeItem(AKILIOS_WIDGET_SESSION_KEY);
+      return null;
+    }
   }
 
-  const sessionId = getOrCreateSessionId();
+  const sessionId = await getOrCreateSessionId();
+  if (!sessionId) {
+    console.warn("[AkiliOSWidget] No valid session. Widget not loaded.");
+    return;
+  }
 
   // Inject widget container
-  const widgetEl = document.createElement('div');
-  widgetEl.id = 'akilios-widget-container';
-  widgetEl.style.display = 'none';
+  const widgetEl = document.createElement("div");
+  widgetEl.id = "akilios-widget-container";
+  widgetEl.style.display = "none";
   widgetEl.innerHTML = `
     <div class="akilios-widget">
       <div class="akilios-header">
@@ -88,10 +103,10 @@ import './widget.css';
   document.body.appendChild(widgetEl);
 
   // Bubble (hidden initially)
-  const launcher = document.createElement('div');
-  launcher.innerText = '💬';
-  launcher.id = 'akilios-launcher';
-  launcher.className = 'akilios-launcher';
+  const launcher = document.createElement("div");
+  launcher.innerText = "💬";
+  launcher.id = "akilios-launcher";
+  launcher.className = "akilios-launcher";
   launcher.style = `
     display: none;
     position: fixed;
@@ -115,37 +130,41 @@ import './widget.css';
   document.body.appendChild(launcher);
 
   // Query elements
-  const closeBtn = widgetEl.querySelector('#akilios-close');
-  const minimizeBtn = widgetEl.querySelector('#akilios-minimize');
-  const sendBtn = widgetEl.querySelector('#akilios-send');
-  const messageInput = widgetEl.querySelector('#akilios-message');
-  const messagesContainer = widgetEl.querySelector('#akilios-messages');
+  const closeBtn = widgetEl.querySelector("#akilios-close");
+  const minimizeBtn = widgetEl.querySelector("#akilios-minimize");
+  const sendBtn = widgetEl.querySelector("#akilios-send");
+  const messageInput = widgetEl.querySelector("#akilios-message");
+  const messagesContainer = widgetEl.querySelector("#akilios-messages");
 
   // Widget public API
   const AkiliOSWidget = {
     getSessionId: () => sessionId,
 
     open() {
-      widgetEl.style.display = 'block';
-      launcher.style.display = 'none';
+      // now send backend to connect session created and conversion
+      widgetEl.style.display = "block";
+      launcher.style.display = "none";
     },
 
     close() {
-      widgetEl.style.display = 'none';
-      launcher.style.display = 'none';
+      widgetEl.style.display = "none";
+      launcher.style.display = "none";
     },
 
     minimize() {
-      widgetEl.style.display = 'none';
-      launcher.style.display = 'block';
+      widgetEl.style.display = "none";
+      launcher.style.display = "block";
     },
 
     showBubble() {
-      launcher.style.display = 'block';
+      launcher.style.display = "block";
     },
 
     contactMe: async function (formData) {
-      if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      if (
+        !formData.email ||
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)
+      ) {
         console.warn("[AkiliOSWidget] Invalid or missing email");
         return Promise.reject("Email is required and must be valid.");
       }
@@ -156,23 +175,23 @@ import './widget.css';
         origin,
         referrer,
         ...formData,
-        submittedAt: new Date().toISOString()
+        submittedAt: new Date().toISOString(),
       };
 
       return await fetch(`${apiUrl}/contact`, {
-        method: 'POST',
+        method: "POST",
         headers: addHeaders(),
-        body: JSON.stringify(payload)
-      }).then(res => res.json());
-    }
+        body: JSON.stringify(payload),
+      }).then((res) => res.json());
+    },
   };
 
   async function createConversation(payload) {
     return await fetch(`${apiUrl}/conversation`, {
-      method: 'POST',
+      method: "POST",
       headers: addHeaders(),
-      body: JSON.stringify(payload)
-    }).then(res => res.json());
+      body: JSON.stringify(payload),
+    }).then((res) => res.json());
   }
 
   function createBotBubble() {
@@ -182,14 +201,14 @@ import './widget.css';
     messagesContainer.appendChild(botMsg);
     return botMsg.querySelector(".akilios-message-bubble");
   }
-  
+
   function appendTime(bubble) {
     const time = document.createElement("span");
     time.className = "akilios-message-time";
     time.textContent = new Date().toLocaleTimeString();
     bubble.appendChild(time);
   }
-  
+
   function scrollMessagesToBottom() {
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
   }
@@ -197,7 +216,9 @@ import './widget.css';
   async function streamChat(messageId) {
     // do validation here also for frontend
     const sessionId = localStorage.getItem(AKILIOS_WIDGET_SESSION_KEY);
-    const eventSource = new EventSource(`${apiUrl}/chat-stream?messageId=${messageId}&sessionId=${sessionId}&clientId=${clientId}`);
+    const eventSource = new EventSource(
+      `${apiUrl}/chat-stream?messageId=${messageId}&sessionId=${sessionId}&clientId=${clientId}`
+    );
     const bubble = createBotBubble();
     eventSource.onmessage = (e) => {
       bubble.textContent += e.data + " ";
@@ -212,48 +233,51 @@ import './widget.css';
   window.AkiliOSWidget = AkiliOSWidget;
 
   // Safe event bindings
-  if (launcher) launcher.addEventListener('click', AkiliOSWidget.open);
-  if (closeBtn) closeBtn.addEventListener('click', AkiliOSWidget.close);
-  if (minimizeBtn) minimizeBtn.addEventListener('click', () => {
-    widgetEl.style.display = 'none';
-    launcher.style.display = 'flex';
-  });
+  if (launcher) launcher.addEventListener("click", AkiliOSWidget.open);
+  if (closeBtn) closeBtn.addEventListener("click", AkiliOSWidget.close);
+  if (minimizeBtn)
+    minimizeBtn.addEventListener("click", () => {
+      widgetEl.style.display = "none";
+      launcher.style.display = "flex";
+    });
   if (sendBtn && messageInput && messagesContainer) {
-    sendBtn.addEventListener('click', async () => {
+    sendBtn.addEventListener("click", async () => {
       const message = messageInput.value.trim();
       if (!message) return;
       // Add user's message to chat
-      const userMsg = document.createElement('div');
-      userMsg.className = 'akilios-message akilios-message-user';
+      const userMsg = document.createElement("div");
+      userMsg.className = "akilios-message akilios-message-user";
       userMsg.innerHTML = `<span class="akilios-message-avatar">C</span><div class="akilios-message-bubble"></div>`;
       // Use textContent for user message to prevent XSS
-      userMsg.querySelector('.akilios-message-bubble').textContent = message;
+      userMsg.querySelector(".akilios-message-bubble").textContent = message;
       // Add time
-      const timeSpan = document.createElement('span');
-      timeSpan.className = 'akilios-message-time';
-      timeSpan.textContent = '13:31';
-      userMsg.querySelector('.akilios-message-bubble').appendChild(timeSpan);
+      const timeSpan = document.createElement("span");
+      timeSpan.className = "akilios-message-time";
+      timeSpan.textContent = "13:31";
+      userMsg.querySelector(".akilios-message-bubble").appendChild(timeSpan);
       messagesContainer.appendChild(userMsg);
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      messageInput.value = '';
+      messageInput.value = "";
       // respond to messages, need to see how to keep history
       const response = await createConversation({ message });
-      if(response.success && response.messageId) {
-        await streamChat(response.messageId)
+      if (response.success && response.messageId) {
+        await streamChat(response.messageId);
       }
     });
   }
 
   // Send message on Enter key
-  messageInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+  messageInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       sendBtn.click();
     }
   });
 
   // Dispatch ready signal
-  window.dispatchEvent(new CustomEvent("AkiliOSWidgetReady", {
-    detail: { sessionId, clientId }
-  }));
+  window.dispatchEvent(
+    new CustomEvent("AkiliOSWidgetReady", {
+      detail: { sessionId, clientId },
+    })
+  );
 })();
